@@ -249,7 +249,7 @@ export async function handleButton(interaction: ButtonInteraction) {
 
       const content = (roll !== 1)
         ? `# You're at ${game.currentPlayer.tempScore}.\nYou rolled a ${roll}. ${game.currentPlayer.tempScore >= 20 ? 'Do you DARE keep going?' : 'Roll again?'}`
-        : `# You rolled a ${roll}... sucks to be you!\nIt now ${game.currentPlayer.name}'s turn.`
+        : `# You rolled a ${roll}... sucks to be you!\nIt is now ${game.currentPlayer.name}'s turn.`
 
       await interaction.update({
         embeds: [game.getResponseEmbed(content)]
