@@ -110,7 +110,32 @@ client.on('messageCreate', async (message) => {
 })
 
 client.on(Events.InteractionCreate, async interaction => {
-	if (!interaction.isChatInputCommand()) return;
+	if (interaction.isButton()) {
+		const [commandName] = interaction.customId.split(':')
+		const command = interaction.client.commands.get(commandName)
+
+		if (!command?.handleButton) {
+			await interaction.reply({
+				content: 'This button is no longer available.',
+				flags: MessageFlags.Ephemeral
+			})
+			return
+		}
+
+		try {
+			await command.handleButton(interaction)
+		} catch (error) {
+			console.error(error)
+			if (interaction.replied || interaction.deferred) {
+				await interaction.followUp({ content: 'There was an error handling that button.', flags: MessageFlags.Ephemeral })
+			} else {
+				await interaction.reply({ content: 'There was an error handling that button.', flags: MessageFlags.Ephemeral })
+			}
+		}
+		return
+	}
+
+	if (!interaction.isChatInputCommand()) return
 
 	const command = interaction.client.commands.get(interaction.commandName);
 

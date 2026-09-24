@@ -1,4 +1,4 @@
-import { Client, Collection, ChatInputCommandInteraction, SlashCommandBuilder } from 'discord.js';
+import { Client, Collection, ChatInputCommandInteraction, SlashCommandBuilder, ButtonInteraction } from 'discord.js';
 
 declare module 'discord.js' {
   export interface Client {
@@ -8,5 +8,6 @@ declare module 'discord.js' {
   export interface Command {
     data: SlashCommandBuilder;
     execute: (interaction: ChatInputCommandInteraction) => Promise<void>;
+    handleButton?: (interaction: ButtonInteraction) => Promise<void>;
   }
 }
