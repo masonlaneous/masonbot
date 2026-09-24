@@ -1,33 +1,34 @@
 import { REST, Routes } from 'discord.js';
-import config from './config.json' assert { type: "json" };
+import config from './config.json' with { type: 'json' };
 import fs from 'node:fs';
 import path, { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url'
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
-const { clientId, token } = config
+const { clientId, token } = config;
 
-const commands = [];
-// Grab all the command folders from the commands directory you created earlier
-const foldersPath = path.join(__dirname, 'dist', 'commands');
-const commandFolders = fs.readdirSync(foldersPath);
+async function deployCommands() {
+    const commands = [];
+    const foldersPath = path.join(__dirname, 'dist', 'commands');
+    const commandFolders = fs.readdirSync(foldersPath, { withFileTypes: true })
+        .filter(entry => entry.isDirectory())
+        .map(entry => entry.name);
 
-(async () => {
     for (const folder of commandFolders) {
-        // Grab all the command files from the commands directory you created earlier
         const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
-        // Grab the SlashCommandBuilder#toJSON() output of each command's data for deployment
+        const commandFiles = fs.readdirSync(commandsPath, { withFileTypes: true })
+            .filter(entry => entry.isFile() && entry.name.endsWith('.js'))
+            .map(entry => entry.name);
+
         for (const file of commandFiles) {
             const filePath = path.join(commandsPath, file);
-            // Dynamically import the command file
-            const command = await import(`file://${filePath}`);
+            const command = await import(pathToFileURL(filePath).href);
             if ('data' in command && 'execute' in command) {
-				const commandData = command.data.toJSON()
+                const commandData = command.data.toJSON();
 
-				commandData.integration_types = [0, 1]
-				commandData.contexts = [0, 1, 2]
+                commandData.integration_types = [0, 1];
+                commandData.contexts = [0, 1, 2];
 
                 commands.push(commandData);
             } else {
@@ -40,17 +41,21 @@ const commandFolders = fs.readdirSync(foldersPath);
     const rest = new REST().setToken(token);
 
     // Deploy the commands
-    try {
-        console.log(`Started refreshing ${commands.length} application (/) commands.`);
+    console.log(`Started refreshing ${commands.length} application (/) commands.`);
 
-        // The put method is used to fully refresh all commands globally
-        const data = await rest.put(
-            Routes.applicationCommands(clientId),
-            { body: commands },
-        );
+    // The put method is used to fully refresh all commands globally
+    const data = await rest.put(
+        Routes.applicationCommands(clientId),
+        { body: commands },
+    );
 
-        console.log(`Successfully reloaded ${data.length} application (/) commands.`);
-    } catch (error) {
-        console.error(error);
-    }
-})();
+    console.log(`Successfully reloaded ${data.length} application (/) commands.`);
+    process.exit(0);
+}
+
+try {
+    await deployCommands();
+} catch (error) {
+    console.error(error);
+    process.exit(1);
+}

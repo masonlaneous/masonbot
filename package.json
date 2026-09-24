@@ -9,8 +9,8 @@
     "build": "pnpm tsc --project tsconfig.json",
     "pm2": "pm2 start ecosystem.config.json --env production --only masonbot",
     "deploycommands": "pnpm run build && node deploy-commands.mjs",
-    "start": "pnpm run build && pnpm run pm2",
-    "update": "pnpm run build && pnpm run pm2"
+    "start": "pnpm run deploycommands && pnpm run pm2",
+    "update": "pnpm run deploycommands && pnpm run pm2"
   },
   "keywords": [],
   "author": "",
