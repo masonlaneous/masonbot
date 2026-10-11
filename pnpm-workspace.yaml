@@ -2,3 +2,5 @@ allowBuilds:
   canvas: true
   esbuild: true
   sqlite3: true
+overrides:
+  '@types/node': '20'
